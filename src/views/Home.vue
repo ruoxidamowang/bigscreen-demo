@@ -127,7 +127,7 @@ const config = reactive({
   rowNum: 20,
   index: true,
   indexHeader: '序号',
-  columnWidth: [100],
+  columnWidth: [60],
   waitTime: 2000,
   data: coloredData.value
 })
