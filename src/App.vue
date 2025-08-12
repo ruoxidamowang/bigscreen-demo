@@ -9,5 +9,7 @@
 </template>
 
 <style scoped>
-
+body, html, #app {
+  font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
 </style>
