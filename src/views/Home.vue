@@ -1,13 +1,58 @@
 <template>
-  <dv-full-screen-container>
-    <dv-border-box-12>
-      <dv-scroll-board :config="config" @click="clickRow"/>
-    </dv-border-box-12>
-  </dv-full-screen-container>
+  <div class="dv-root">
+    <!-- 实时统计信息 -->
+    <div class="stats-overlay">
+      <div class="stats-header">
+        <span>实时数据统计</span>
+        <div class="header-controls">
+          <span class="scroll-indicator" v-if="scrollPosition > 0">
+            📍 已保存滚动位置
+          </span>
+          <el-button 
+            type="primary" 
+            size="small" 
+            :icon="RefreshRight"
+            @click="handleManualRefresh"
+            :loading="loading"
+          >
+            刷新
+          </el-button>
+        </div>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">总数量:</span>
+        <span class="stat-value">{{ stats.total }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">未出库:</span>
+        <span class="stat-value danger">{{ stats.statusStats['未出库'] || 0 }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">装货中:</span>
+        <span class="stat-value warning">{{ stats.statusStats['装货中'] || 0 }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">已出库:</span>
+        <span class="stat-value success">{{ stats.statusStats['已出库'] || 0 }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">更新时间:</span>
+        <span class="stat-value">{{ formatTime(stats.lastUpdate) }}</span>
+      </div>
+    </div>
+    
+    <border-box12>
+      <scroll-board :config="config" @click="clickRow"/>
+    </border-box12>
+  </div>
 </template>
 
 <script setup>
-import {computed, reactive} from "vue";
+import {BorderBox12, ScrollBoard} from "@kjgl77/datav-vue3";
+import {useTableStore} from '@/stores/tableStore.js'
+import {storeToRefs} from 'pinia'
+import {onUnmounted} from 'vue'
+import {RefreshRight} from '@element-plus/icons-vue'
 
 defineOptions({
   name: 'Home',
@@ -19,82 +64,12 @@ const colorMap = {
   "已出库": "green",
 };
 
-const rawData = [
-  ["川A1FJVL", "三区", '吴', "易碎品", "已出库"],
-  ["蒙GDUA82", "一区", '吴', "需加急处理", "已出库"],
-  ["桂K5PJYG", "四区", '吴', "冷链运输", "未出库"],
-  ["苏CXP8BL", "五区", '吴', "急单", "未出库"],
-  ["新YUCQGY", "四区", '吴', "需加急处理", "装货中"],
-  ["赣ASE5UU", "五区", '吴', "急单", "装货中"],
-  ["鄂ZPZLEX", "三区", '吴', "大件", "未出库"],
-  ["渝OR6FOX", "四区", '吴', "无", "装货中"],
-  ["青D3QC44", "二区", '吴', "客户自提", "已出库"],
-  ["湘F8S28X", "一区", '吴', "冷链运输", "未出库"],
-  ["川QHKF22", "五区", '吴', "无", "装货中"],
-  ["吉5GFPF4", "四区", '吴', "易碎品", "装货中"],
-  ["桂NUC5R5", "三区", '吴', "需加急处理", "未出库"],
-  ["蒙9D5XTG", "一区", '吴', "无", "未出库"],
-  ["京M51JHL", "五区", '吴', "无", "未出库"],
-  ["赣ESWMT6", "二区", '吴', "无", "装货中"],
-  ["皖P9T62H", "四区", '吴', "冷链运输", "装货中"],
-  ["桂RO7A4M", "三区", '叶', "易碎品", "未出库"],
-  ["川G1DKP4", "三区", '叶', "普通货物", "已出库"],
-  ["黑Q2F9RE", "三区", '叶', "危险品", "装货中"],
-  ["苏HZRHM9", "二区", '叶', "易碎品", "装货中"],
-  ["新UKXFZY", "一区", '叶', "大件", "装货中"],
-  ["川QFJHMN", "三区", '叶', "普通货物", "装货中"],
-  ["赣J9T8X3", "四区", '叶', "普通货物", "已出库"],
-  ["鄂4XQW7Z", "一区", '叶', "无", "未出库"],
-  ["京X9LHWV", "五区", '叶', "客户自提", "未出库"],
-  ["皖C7H5P1", "三区", '叶', "需加急处理", "装货中"],
-  ["渝EK59M1", "四区", '叶', "无", "装货中"],
-  ["湘FKY6RL", "二区", '叶', "急单", "装货中"],
-  ["蒙OZ7RKP", "五区", '叶', "无", "未出库"],
-  ["黑VCQ8KA", "四区", '叶', "冷链运输", "装货中"],
-  ["鄂WUS29M", "三区", '叶', "危险品", "装货中"],
-  ["晋L9M7ZX", "二区", '敦', "普通货物", "已出库"],
-  ["黑GKVMC7", "三区", '敦', "危险品", "未出库"],
-  ["赣MTB2WQ", "五区", '敦', "客户自提", "装货中"],
-  ["苏X3FHMY", "四区", '叶', "急单", "未出库"],
-  ["川P8ZVNG", "一区", '叶', "易碎品", "装货中"],
-  ["蒙ULFW83", "五区", '叶', "无", "已出库"],
-  ["宁XZV9JP", "三区", '叶', "需加急处理", "装货中"],
-  ["京FY1H8O", "四区", '叶', "危险品", "已出库"],
-  ["皖SJTCL4", "二区", '叶', "普通货物", "装货中"],
-  ["鄂XJ7UPY", "一区", '叶', "客户自提", "未出库"],
-  ["赣Q4M8KP", "五区", '叶', "无", "装货中"],
-  ["新CB2JYO", "四区", '叶', "冷链运输", "装货中"],
-  ["湘VKRW1M", "三区", '叶', "急单", "未出库"],
-  ["冀MYZW3F", "一区", '叶', "大件", "装货中"],
-  ["桂U1WZYJ", "二区", '叶', "普通货物", "未出库"],
-  ["京M6JOPV", "三区", '叶', "无", "已出库"],
-  ["川FD9YHV", "四区", '叶', "需加急处理", "装货中"],
-  ["蒙C4P8UY", "五区", '叶', "易碎品", "已出库"],
-  ["京MX4QYB", "四区", '叶', "急单", "已出库"],
-  ["川5FVB9N", "五区", '叶', "危险品", "装货中"],
-  ["蒙ZG9VHE", "三区", '叶', "需加急处理", "已出库"],
-  ["渝OPJ9TV", "一区", '叶', "无", "未出库"],
-  ["宁QFJY81", "四区", '叶', "大件", "装货中"],
-  ["湘ZYW5TJ", "五区", '叶', "客户自提", "已出库"],
-  ["黑V1KY4M", "三区", '叶', "普通货物", "装货中"],
-  ["赣JMQKYN", "二区", '叶', "急单", "未出库"],
-  ["苏XZ3FPK", "一区", '叶', "需加急处理", "装货中"],
-  ["京LMOVRX", "四区", '叶', "无", "装货中"],
-]
+// 使用store管理表格数据
+const tableStore = useTableStore()
+const { tableData, loading } = storeToRefs(tableStore)
 
-const coloredData = computed(() => {
-    return rawData.map(row => {
-      const color = colorMap[row[4]] || "black";
-      return [
-        row[0],
-        row[1],
-        row[2],
-        row[3],
-        `<span style="color:${color}">${row[4]}</span>`,
-      ];
-    })
-  }
-);
+// 滚动位置状态
+const scrollPosition = ref(0)
 
 const config = reactive({
   header: ['车牌号', '区域', '负责人', '备注', '状态'],
@@ -103,14 +78,153 @@ const config = reactive({
   indexHeader: '序号',
   columnWidth: [60],
   waitTime: 2000,
-  data: coloredData.value
+  data: []
 })
 
 const clickRow = ({row, ceil, rowIndex, columnIndex}) => {
   console.log(row, ceil, rowIndex, columnIndex);
 }
+
+const initData = () => {
+  config.data = tableData.value.map(row => {
+    const color = colorMap[row.status] || "black";
+    return [
+      row.plate,
+      row.area,
+      row.leader,
+      row.remark,
+      `<span style="color:${color}">${row.status}</span>`,
+    ];
+  })
+}
+
+onMounted(() => {
+  tableStore.loadData()
+})
+
+// 组件卸载时停止自动刷新和清理事件监听器
+onUnmounted(() => {
+  tableStore.stopAutoRefresh()
+})
+
+// 计算统计数据
+const stats = computed(() => tableStore.getDataStats())
+
+// 格式化时间
+const formatTime = (timeStr) => {
+  if (!timeStr) return '--'
+  const date = new Date(timeStr)
+  return date.toLocaleTimeString('zh-CN', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  })
+}
+
+// 手动刷新数据
+const handleManualRefresh = async () => {
+  await tableStore.loadData()
+}
+
+// 监听数据变化，自动更新显示
+watch(tableData, () => {
+  initData()
+}, { immediate: true })
 </script>
 
 <style scoped lang="scss">
+.dv-root {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  transform-origin: left top;
+  z-index: 999;
+}
 
+.stats-overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 16px;
+  color: white;
+  z-index: 1000;
+  min-width: 200px;
+  
+  .stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    
+    span {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .scroll-indicator {
+        font-size: 12px;
+        color: #67c23a;
+        background: rgba(103, 194, 58, 0.2);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(103, 194, 58, 0.3);
+      }
+      
+      .el-button {
+        background: rgba(64, 158, 255, 0.8);
+        border: none;
+        color: white;
+        
+        &:hover {
+          background: rgba(64, 158, 255, 1);
+        }
+      }
+    }
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .stat-label {
+      color: #ccc;
+      font-size: 14px;
+    }
+    
+    .stat-value {
+      font-weight: 600;
+      font-size: 16px;
+      
+      &.danger {
+        color: #f56c6c;
+      }
+      
+      &.warning {
+        color: #e6a23c;
+      }
+      
+      &.success {
+        color: #67c23a;
+      }
+    }
+  }
+}
 </style>

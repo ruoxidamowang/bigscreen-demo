@@ -1,5 +1,128 @@
-# Vue 3 + Vite
+# BigScreen Demo 项目
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+这是一个基于 Vue 3 + Element Plus 的大屏演示项目，包含桌面版和移动端两个版本。
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 功能特性
+
+### 用户认证
+- 登录验证：默认账号 `admin` / 密码 `123456`
+- 路由守卫：未登录用户自动跳转到登录页
+- 登录状态管理：使用 localStorage 存储登录状态
+
+### 桌面版 (`/` 或 `/index`)
+- 完整的 CRUD 操作（增删改查）
+- 表格形式展示数据
+- 搜索和筛选功能
+- 弹窗表单编辑
+- 用户信息显示和登出功能
+
+### 移动端 (`/mobile`)
+- 仅支持搜索和查看功能
+- 响应式设计，适配手机浏览器
+- 卡片式数据展示
+- 触摸友好的界面
+- 用户信息显示和登出功能
+
+### 数据同步功能
+- **实时数据同步**：Index页面操作数据后，Home页面自动更新
+- **统一状态管理**：使用Pinia store管理所有表格数据
+- **自动刷新**：增删改操作后自动刷新所有相关页面
+- **实时统计**：Home页面显示实时数据统计和更新时间
+- **多浏览器同步**：支持多个浏览器窗口实时数据同步
+- **定时自动刷新**：Home页面每5秒、Index页面每10秒、Mobile页面每8秒自动刷新
+- **手动刷新按钮**：Home页面提供手动刷新按钮，立即获取最新数据
+- **智能滚动保持**：自动刷新时保持滚动位置，避免用户阅读中断
+- **滚动位置记忆**：使用localStorage保存滚动位置，页面刷新后恢复
+
+## 技术栈
+
+- Vue 3 (Composition API)
+- Element Plus UI 组件库
+- Vue Router 路由管理
+- Pinia 状态管理
+- SCSS 样式预处理
+
+## 快速开始
+
+### 安装依赖
+```bash
+pnpm install
+```
+
+### 启动后端服务器
+```bash
+cd server
+node server.js
+```
+
+### 启动前端开发服务器
+```bash
+pnpm dev
+```
+
+### 构建生产版本
+```bash
+pnpm build
+```
+
+## 页面导航
+
+- **桌面版**: 访问 `/` 或 `/index`
+- **移动端**: 访问 `/mobile`
+- 两个版本之间可以通过页面上的按钮互相切换
+
+## 移动端特性
+
+### 响应式设计
+- 适配各种屏幕尺寸
+- 触摸友好的按钮和表单
+- 优化的移动端布局
+
+### 功能限制
+- 仅支持数据查询和展示
+- 不包含增删改操作
+- 专注于移动端用户体验
+
+### 样式特性
+- 卡片式数据展示
+- 圆角设计和阴影效果
+- 支持深色模式
+- 渐变按钮效果
+
+## 项目结构
+
+```
+src/
+├── views/
+│   ├── Index.vue      # 桌面版主页面
+│   ├── Mobile.vue     # 移动端页面
+│   └── Home.vue       # 首页
+├── api/
+│   └── table.js       # 数据接口
+├── router/
+│   └── index.js       # 路由配置
+└── components/         # 公共组件
+```
+
+## 浏览器兼容性
+
+- 现代浏览器（Chrome, Firefox, Safari, Edge）
+- 移动端浏览器
+- 支持触摸操作
+
+## 开发说明
+
+### 添加新功能
+1. 在 `src/views/` 下创建新的页面组件
+2. 在 `src/router/index.js` 中添加路由配置
+3. 在 `src/api/` 下添加相应的接口文件
+
+### 样式开发
+- 使用 SCSS 预处理器
+- 遵循 BEM 命名规范
+- 支持响应式设计
+- 考虑深色模式支持
+
+## 许可证
+
+MIT License
