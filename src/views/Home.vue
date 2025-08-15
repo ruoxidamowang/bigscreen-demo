@@ -5,15 +5,11 @@
       <div class="stats-header">
         <span>实时数据统计</span>
         <div class="header-controls">
-          <span class="scroll-indicator" v-if="scrollPosition > 0">
-            📍 已保存滚动位置
-          </span>
-          <el-button 
-            type="primary" 
-            size="small" 
+          <el-button
+            type="primary"
+            size="small"
             :icon="RefreshRight"
-            @click="handleManualRefresh"
-            :loading="loading"
+            @click="refreshData"
           >
             刷新
           </el-button>
@@ -40,18 +36,14 @@
         <span class="stat-value">{{ formatTime(stats.lastUpdate) }}</span>
       </div>
     </div>
-    
-    <border-box12>
-      <scroll-board :config="config" @click="clickRow"/>
-    </border-box12>
+
+    <scroll-board ref="scrollBoardRef" :config="config" @mouseenter="pauseAutoRefresh" @mouseleave="resumeAutoRefresh"/>
   </div>
 </template>
 
 <script setup>
-import {BorderBox12, ScrollBoard} from "@kjgl77/datav-vue3";
+import {ScrollBoard} from "@kjgl77/datav-vue3";
 import {useTableStore} from '@/stores/tableStore.js'
-import {storeToRefs} from 'pinia'
-import {onUnmounted} from 'vue'
 import {RefreshRight} from '@element-plus/icons-vue'
 
 defineOptions({
@@ -66,12 +58,10 @@ const colorMap = {
 
 // 使用store管理表格数据
 const tableStore = useTableStore()
-const { tableData, loading } = storeToRefs(tableStore)
 
-// 滚动位置状态
-const scrollPosition = ref(0)
+const scrollBoardRef = ref(null)
 
-const config = reactive({
+const config = ref({
   header: ['车牌号', '区域', '负责人', '备注', '状态'],
   rowNum: 20,
   index: true,
@@ -81,12 +71,24 @@ const config = reactive({
   data: []
 })
 
-const clickRow = ({row, ceil, rowIndex, columnIndex}) => {
-  console.log(row, ceil, rowIndex, columnIndex);
+// 计算统计数据
+const stats = computed(() => tableStore.getDataStats())
+
+// 格式化时间
+const formatTime = (timeStr) => {
+  if (!timeStr) return '--'
+  const date = new Date(timeStr)
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
 }
 
-const initData = () => {
-  config.data = tableData.value.map(row => {
+const refreshData = async () => {
+  const rows = await tableStore.loadData({})
+  tableStore.getDataStats(rows)
+  const data = rows.map(row => {
     const color = colorMap[row.status] || "black";
     return [
       row.plate,
@@ -95,41 +97,39 @@ const initData = () => {
       row.remark,
       `<span style="color:${color}">${row.status}</span>`,
     ];
-  })
+  });
+  scrollBoardRef.value.updateRows(data)
+}
+
+let intervalId = null
+let isPaused = false
+
+const startAutoRefresh = () => {
+  clearInterval(intervalId)
+  intervalId = setInterval(() => {
+    if (!isPaused) {
+      refreshData()
+    }
+  }, 10 * 1000)
+}
+
+const pauseAutoRefresh = () => {
+  isPaused = true
+}
+
+const resumeAutoRefresh = () => {
+  isPaused = false
 }
 
 onMounted(() => {
-  tableStore.loadData()
+  refreshData()
+  startAutoRefresh()
 })
 
-// 组件卸载时停止自动刷新和清理事件监听器
 onUnmounted(() => {
-  tableStore.stopAutoRefresh()
+  clearInterval(intervalId)
 })
 
-// 计算统计数据
-const stats = computed(() => tableStore.getDataStats())
-
-// 格式化时间
-const formatTime = (timeStr) => {
-  if (!timeStr) return '--'
-  const date = new Date(timeStr)
-  return date.toLocaleTimeString('zh-CN', { 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit' 
-  })
-}
-
-// 手动刷新数据
-const handleManualRefresh = async () => {
-  await tableStore.loadData()
-}
-
-// 监听数据变化，自动更新显示
-watch(tableData, () => {
-  initData()
-}, { immediate: true })
 </script>
 
 <style scoped lang="scss">
@@ -154,7 +154,7 @@ watch(tableData, () => {
   color: white;
   z-index: 1000;
   min-width: 200px;
-  
+
   .stats-header {
     display: flex;
     justify-content: space-between;
@@ -162,18 +162,18 @@ watch(tableData, () => {
     margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    
+
     span {
       font-size: 16px;
       font-weight: 600;
       color: white;
     }
-    
+
     .header-controls {
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       .scroll-indicator {
         font-size: 12px;
         color: #67c23a;
@@ -182,45 +182,45 @@ watch(tableData, () => {
         border-radius: 4px;
         border: 1px solid rgba(103, 194, 58, 0.3);
       }
-      
+
       .el-button {
         background: rgba(64, 158, 255, 0.8);
         border: none;
         color: white;
-        
+
         &:hover {
           background: rgba(64, 158, 255, 1);
         }
       }
     }
   }
-  
+
   .stat-item {
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .stat-label {
       color: #ccc;
       font-size: 14px;
     }
-    
+
     .stat-value {
       font-weight: 600;
       font-size: 16px;
-      
+
       &.danger {
         color: #f56c6c;
       }
-      
+
       &.warning {
         color: #e6a23c;
       }
-      
+
       &.success {
         color: #67c23a;
       }

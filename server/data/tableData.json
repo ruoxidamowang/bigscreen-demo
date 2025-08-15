@@ -207,7 +207,7 @@
     "area": "四区",
     "leader": "叶",
     "remark": "冷链运输",
-    "status": "装货中"
+    "status": "未出库"
   },
   {
     "plate": "鄂WUS29M",
@@ -271,13 +271,6 @@
     "leader": "叶",
     "remark": "危险品",
     "status": "已出库"
-  },
-  {
-    "plate": "皖SJTCL4",
-    "area": "二区",
-    "leader": "叶",
-    "remark": "普通货物",
-    "status": "装货中"
   },
   {
     "plate": "鄂XJ7UPY",
@@ -396,6 +389,27 @@
     "area": "二区",
     "leader": "叶",
     "remark": "急单",
+    "status": "未出库"
+  },
+  {
+    "plate": "川A1FJVL",
+    "area": "三区",
+    "leader": "吴",
+    "remark": "易碎品",
+    "status": "未出库"
+  },
+  {
+    "plate": "蒙ULFW83",
+    "area": "五区",
+    "leader": "敦",
+    "remark": "无",
+    "status": "已出库"
+  },
+  {
+    "plate": "京X9LHWV",
+    "area": "五区",
+    "leader": "吴",
+    "remark": "客户自提",
     "status": "未出库"
   }
 ]

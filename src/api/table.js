@@ -1,12 +1,8 @@
-import {ref} from 'vue'
 import request from "@/utils/request";
-
-export const tableData = ref([])
 
 // 加载数据
 export const loadData = async (params = {}) => {
     const res = await request.get('/api/table', {params})
-    tableData.value = res.rows
     return res.rows
 }
 

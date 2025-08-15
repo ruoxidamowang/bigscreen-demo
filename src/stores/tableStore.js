@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia'
 import {ref} from 'vue'
-import {addRow, deleteRow, loadData as apiLoadData} from '@/api/table.js'
+import {addRow, deleteRow, editRow, loadData as apiLoadData} from '@/api/table.js'
 
 export const useTableStore = defineStore('table', () => {
   // 状态
@@ -8,29 +8,22 @@ export const useTableStore = defineStore('table', () => {
   const loading = ref(false)
   const lastUpdateTime = ref(null)
 
+  const homeCb = (cb) => {
+    return cb?.()
+  }
+
   // 获取数据
   const loadData = async (filters = {}) => {
     loading.value = true
     try {
-      console.log('开始加载数据，过滤器:', filters)
       const response = await apiLoadData(filters)
-      console.log('API响应数据:', response)
-      // 检查数据是否真的发生了变化
-      const newData = response || []
-      const oldDataHash = JSON.stringify(tableData.value.map(item => item.plate).sort())
-      const newDataHash = JSON.stringify(newData.map(item => item.plate).sort())
       
       // 后端返回的是 { total, rows } 结构，需要提取 rows
-      tableData.value = newData
+      tableData.value = response || []
       console.log('设置到store的数据:', tableData.value)
       lastUpdateTime.value = new Date().toISOString()
-      
-      // 返回数据是否发生变化
-      return {
-        changed: oldDataHash !== newDataHash,
-        oldHash: oldDataHash,
-        newHash: newDataHash
-      }
+
+      return response
     } catch (error) {
       console.error('加载数据失败:', error)
       tableData.value = []
@@ -68,7 +61,7 @@ export const useTableStore = defineStore('table', () => {
   // 更新数据
   const updateTableRow = async (plate, rowData) => {
     try {
-      // 这里需要调用更新API，暂时用重新加载数据的方式
+      await editRow(plate, rowData)
       await loadData()
       return { success: true }
     } catch (error) {
@@ -78,9 +71,9 @@ export const useTableStore = defineStore('table', () => {
   }
 
   // 获取数据统计
-  const getDataStats = () => {
-    const total = tableData.value.length
-    const statusStats = tableData.value.reduce((acc, item) => {
+  const getDataStats = (data) => {
+    const total = toRaw(data).length
+    const statusStats = toRaw(data).reduce((acc, item) => {
       acc[item.status] = (acc[item.status] || 0) + 1
       return acc
     }, {})
@@ -97,6 +90,7 @@ export const useTableStore = defineStore('table', () => {
     tableData,
     loading,
     lastUpdateTime,
+    homeCb,
     
     // 方法
     loadData,

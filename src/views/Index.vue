@@ -110,7 +110,6 @@ import {logout} from '@/api/auth.js'
 import {useRouter} from 'vue-router'
 import {useTableStore} from '@/stores/tableStore.js'
 import {storeToRefs} from 'pinia'
-import {onUnmounted} from 'vue'
 
 defineOptions({
   name: 'Index',
@@ -204,13 +203,6 @@ const handleDelete = (row) => {
 
 onMounted(() => {
   tableStore.loadData()
-  // 启动自动刷新，每10秒刷新一次数据
-  tableStore.startAutoRefresh(10000)
-})
-
-// 组件卸载时停止自动刷新
-onUnmounted(() => {
-  tableStore.stopAutoRefresh()
 })
 
 const dialogVisible = ref(false)
@@ -262,13 +254,24 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
-    const result = await tableStore.addTableRow(form.value)
-    if (result.success) {
-      ElMessage.success('保存成功')
-      close()
+    if (title.value === '新增') {
+      const result = await tableStore.addTableRow(form.value)
+      if (result.success) {
+        ElMessage.success('保存成功')
+        close()
+      } else {
+        ElMessage.error('保存失败')
+      }
     } else {
-      ElMessage.error('保存失败')
+      const result = await tableStore.updateTableRow(form.value.plate, form.value)
+      if (result.success) {
+        ElMessage.success('更新成功')
+        close()
+      } else {
+        ElMessage.error('更新失败')
+      }
     }
+
   } catch (error) {
     console.log('表单验证失败:', error)
   }
@@ -298,13 +301,13 @@ const handleLogout = async () => {
     localStorage.removeItem('username')
     ElMessage.success('已退出登录')
     // 跳转到登录页
-    router.push('/login')
+    await router.push('/login')
   } catch (error) {
     console.error('登出失败:', error)
     // 即使API调用失败，也清除本地存储并跳转
     localStorage.removeItem('isLoggedIn')
     localStorage.removeItem('username')
-    router.push('/login')
+    await router.push('/login')
   }
 }
 

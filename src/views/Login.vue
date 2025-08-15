@@ -47,11 +47,6 @@
           </el-button>
         </el-form-item>
       </el-form>
-      
-      <div class="login-tips">
-        <p>默认账号：admin</p>
-        <p>默认密码：123456</p>
-      </div>
     </div>
   </div>
 </template>
