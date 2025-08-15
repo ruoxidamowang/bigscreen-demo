@@ -10,10 +10,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const DATA_FILE = join(__dirname, 'data/tableData.json')
 
-app.use(express.static(join(__dirname, './dist')));
+app.use(express.static(join(__dirname, '../dist')));
 
 app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, './dist/index.html'));
+    res.sendFile(join(__dirname, '../dist/index.html'));
 });
 
 app.use(cors())
