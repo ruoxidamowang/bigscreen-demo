@@ -1,15 +1,20 @@
 import express from 'express'
 import fs from 'fs'
 import cors from 'cors'
-import path from 'path'
+import {dirname, join} from 'path';
 import {fileURLToPath} from 'url'
 
 const app = express()
-const PORT = 3000
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const DATA_FILE = path.join(__dirname, 'data/tableData.json')
+const __dirname = dirname(__filename)
+const DATA_FILE = join(__dirname, 'data/tableData.json')
+
+app.use(express.static(join(__dirname, './dist')));
+
+app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, './dist/index.html'));
+});
 
 app.use(cors())
 app.use(express.json()) // 支持 JSON 请求体
@@ -139,6 +144,5 @@ app.get('/api/auth/check', (req, res) => {
     }
 })
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`)
-})
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

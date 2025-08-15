@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "frontend": "pnpm dev",
     "backend": "node server/server.js",
-    "start": "concurrently \"pnpm backend\" \"pnpm frontend\""
+    "startall": "concurrently \"pnpm backend\" \"pnpm frontend\"",
+    "postinstall": "npm install && npm run build",
+    "start": "node backend/server.js"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
