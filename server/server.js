@@ -1,20 +1,16 @@
 import express from 'express'
 import fs from 'fs'
 import cors from 'cors'
-import {dirname, join} from 'path';
+import path from 'path';
 import {fileURLToPath} from 'url'
 
 const app = express()
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const DATA_FILE = join(__dirname, 'data/tableData.json')
+const __dirname = path.dirname(__filename)
+const DATA_FILE = path.join(__dirname, 'data/tableData.json')
 
-app.use(express.static(join(__dirname, '../dist')));
-
-app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../dist/index.html'));
-});
+app.use(express.static(path.join(__dirname, '../dist')));
 
 app.use(cors())
 app.use(express.json()) // 支持 JSON 请求体
@@ -101,19 +97,19 @@ app.delete('/api/table/:plate', (req, res) => {
 // 登录接口
 app.post('/api/auth/login', (req, res) => {
     const { username, password } = req.body
-    
+
     // 验证用户名和密码
     if (username === 'admin' && password === '123456') {
         loggedInUsers.add(username)
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: '登录成功',
             user: { username }
         })
     } else {
-        res.status(401).json({ 
-            success: false, 
-            message: '用户名或密码错误' 
+        res.status(401).json({
+            success: false,
+            message: '用户名或密码错误'
         })
     }
 })
@@ -131,18 +127,23 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/check', (req, res) => {
     const username = req.query.username
     if (username && loggedInUsers.has(username)) {
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             isLoggedIn: true,
             user: { username }
         })
     } else {
-        res.json({ 
-            success: true, 
-            isLoggedIn: false 
+        res.json({
+            success: true,
+            isLoggedIn: false
         })
     }
 })
 
-const PORT = process.env.PORT || 3000;
+app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+const PORT = process.env.PORT || 8888;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+

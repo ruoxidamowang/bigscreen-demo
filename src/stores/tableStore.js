@@ -72,8 +72,15 @@ export const useTableStore = defineStore('table', () => {
 
   // 获取数据统计
   const getDataStats = (data) => {
-    const total = toRaw(data).length
-    const statusStats = toRaw(data).reduce((acc, item) => {
+    if (!data) {
+      return {
+        total: 0,
+        statusStats: {},
+        lastUpdate: lastUpdateTime.value
+      }
+    }
+    const total = data.length
+    const statusStats = data.reduce((acc, item) => {
       acc[item.status] = (acc[item.status] || 0) + 1
       return acc
     }, {})

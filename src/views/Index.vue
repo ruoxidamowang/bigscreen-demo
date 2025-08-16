@@ -54,9 +54,9 @@
       <el-table-column header-align="center" prop="leader" label="负责人" width="120"/>
       <el-table-column header-align="center" align="center" prop="status" label="状态" width="120">
         <template #default="{row}">
-          <el-text v-if="row.status === '未出库'" type="danger">{{row.status}}</el-text>
-          <el-text v-else-if="row.status === '装货中'" type="warning">{{row.status}}</el-text>
-          <el-text v-else-if="row.status === '已出库'" type="primary">{{row.status}}</el-text>
+          <el-text v-if="row.status === '未出库'" type="danger">{{ row.status }}</el-text>
+          <el-text v-else-if="row.status === '装货中'" type="warning">{{ row.status }}</el-text>
+          <el-text v-else-if="row.status === '已出库'" type="primary">{{ row.status }}</el-text>
         </template>
       </el-table-column>
       <el-table-column header-align="center" prop="remark" label="备注"/>
@@ -120,7 +120,7 @@ const username = ref(localStorage.getItem('username') || '用户')
 
 // 使用store管理表格数据
 const tableStore = useTableStore()
-const { tableData } = storeToRefs(tableStore)
+const {tableData} = storeToRefs(tableStore)
 
 const areaArr = ref([{
   label: "一区",
@@ -132,11 +132,14 @@ const areaArr = ref([{
   label: "三区",
   value: "三区"
 }, {
-  label: "四区",
-  value: "四区"
-}, {
   label: "五区",
   value: "五区"
+}, {
+  label: "展厅区",
+  value: "展厅区"
+}, {
+  label: "正一方区",
+  value: "正一方区"
 },])
 const leaderArr = ref([{
   label: "叶",

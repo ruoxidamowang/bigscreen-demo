@@ -1,50 +1,13 @@
 <template>
-  <div class="dv-root">
-    <!-- 实时统计信息 -->
-    <div class="stats-overlay">
-      <div class="stats-header">
-        <span>实时数据统计</span>
-        <div class="header-controls">
-          <el-button
-            type="primary"
-            size="small"
-            :icon="RefreshRight"
-            @click="refreshData"
-          >
-            刷新
-          </el-button>
-        </div>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">总数量:</span>
-        <span class="stat-value">{{ stats.total }}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">未出库:</span>
-        <span class="stat-value danger">{{ stats.statusStats['未出库'] || 0 }}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">装货中:</span>
-        <span class="stat-value warning">{{ stats.statusStats['装货中'] || 0 }}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">已出库:</span>
-        <span class="stat-value success">{{ stats.statusStats['已出库'] || 0 }}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">更新时间:</span>
-        <span class="stat-value">{{ formatTime(stats.lastUpdate) }}</span>
-      </div>
-    </div>
-
+  <div class="dv-root" style="display: flex;">
     <scroll-board ref="scrollBoardRef" :config="config" @mouseenter="pauseAutoRefresh" @mouseleave="resumeAutoRefresh"/>
+    <scroll-board ref="scrollBoardRef2" :config="config" @mouseenter="pauseAutoRefresh" @mouseleave="resumeAutoRefresh"/>
   </div>
 </template>
 
 <script setup>
 import {ScrollBoard} from "@kjgl77/datav-vue3";
 import {useTableStore} from '@/stores/tableStore.js'
-import {RefreshRight} from '@element-plus/icons-vue'
 
 defineOptions({
   name: 'Home',
@@ -60,45 +23,49 @@ const colorMap = {
 const tableStore = useTableStore()
 
 const scrollBoardRef = ref(null)
+const scrollBoardRef2 = ref(null)
 
 const config = ref({
   header: ['车牌号', '区域', '负责人', '备注', '状态'],
-  rowNum: 20,
+  rowNum: 15,
   index: true,
+  carousel: 'page',
   indexHeader: '序号',
   columnWidth: [60],
-  waitTime: 2000,
+  waitTime: 10 * 1000,
+  hoverPause: false,
   data: []
 })
 
-// 计算统计数据
-const stats = computed(() => tableStore.getDataStats())
-
-// 格式化时间
-const formatTime = (timeStr) => {
-  if (!timeStr) return '--'
-  const date = new Date(timeStr)
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}
-
 const refreshData = async () => {
   const rows = await tableStore.loadData({})
-  tableStore.getDataStats(rows)
-  const data = rows.map(row => {
-    const color = colorMap[row.status] || "black";
-    return [
-      row.plate,
-      row.area,
-      row.leader,
-      row.remark,
-      `<span style="color:${color}">${row.status}</span>`,
-    ];
-  });
-  scrollBoardRef.value.updateRows(data)
+  if (rows) {
+    const data = []
+    const data2 = []
+    rows.forEach((row, idx) => {
+      const color = colorMap[row.status] || "black";
+      if (idx % 2 === 0) {
+        data.push([
+          `<span style="font-size: 26px">${row.plate}</span>`,
+          `<span style="font-size: 26px">${row.area}</span>`,
+          `<span style="font-size: 26px">${row.leader}</span>`,
+          `<span style="font-size: 26px">${row.remark}</span>`,
+          `<span style="font-size: 26px; color:${color}">${row.status}</span>`,
+        ])
+      } else {
+        data2.push([
+          `<span style="font-size: 26px">${row.plate}</span>`,
+          `<span style="font-size: 26px">${row.area}</span>`,
+          `<span style="font-size: 26px">${row.leader}</span>`,
+          `<span style="font-size: 26px">${row.remark}</span>`,
+          `<span style="font-size: 26px; color:${color}">${row.status}</span>`,
+        ])
+      }
+    });
+    console.log(data, data2)
+    scrollBoardRef.value.updateRows(data)
+    scrollBoardRef2.value.updateRows(data2)
+  }
 }
 
 let intervalId = null
@@ -135,13 +102,10 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .dv-root {
   height: 100%;
-  width: 100%;
+  width: 90.4vw;
   position: fixed;
   top: 0;
   left: 0;
-  overflow: hidden;
-  transform-origin: left top;
-  z-index: 999;
 }
 
 .stats-overlay {

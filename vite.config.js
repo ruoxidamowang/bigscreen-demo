@@ -24,11 +24,16 @@ export default defineConfig({
         }),],
     server: {
         host: true,
+        port: 8848,
+        allowedHosts: true,
     },
-    base: '/bigscreen-demo/',
+    base: '/',
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'src'),
         }
+    },
+    build: {
+        minify: true,
     }
 })
