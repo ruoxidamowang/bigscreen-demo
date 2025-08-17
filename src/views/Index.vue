@@ -20,7 +20,7 @@
     </div>
 
     <!-- 搜索表单 -->
-    <el-form :inline="true" :model="searchForm">
+    <el-form :inline="true" :model="searchForm" label-width="60">
       <el-form-item label="车牌号">
         <el-input class="search-item" v-model.trim="searchForm.plate" placeholder="请输入车牌号" clearable/>
       </el-form-item>
@@ -68,9 +68,16 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" align-center :title="title" append-to-body @close="close">
-      <div style="height: 60vh; overflow-x: scroll">
-        <el-form :model="form" :rules="rules" label-width="100px" ref="formRef">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="title"
+      append-to-body
+      @close="close"
+      :width="isMobile ? '90%' : '50%'"
+      class="mobile-dialog"
+    >
+      <div class="dialog-content">
+        <el-form :model="form" :rules="rules" label-width="80px" ref="formRef" class="mobile-form">
           <el-form-item label="车牌号" prop="plate">
             <el-input v-model.trim="form.plate" placeholder="请输入车牌号" clearable/>
           </el-form-item>
@@ -96,10 +103,44 @@
       </div>
 
       <template #footer>
-        <el-button type="primary" @click="handleSubmit">提交</el-button>
-        <el-button @click="close">关闭</el-button>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="handleSubmit" class="submit-btn">提交</el-button>
+          <el-button @click="close" class="cancel-btn">关闭</el-button>
+        </div>
       </template>
     </el-dialog>
+<!--    <el-dialog v-model="dialogVisible" align-center :title="title" append-to-body @close="close">-->
+<!--      <div style="height: 60vh; overflow-x: scroll">-->
+<!--        <el-form :model="form" :rules="rules" label-width="100px" ref="formRef">-->
+<!--          <el-form-item label="车牌号" prop="plate">-->
+<!--            <el-input v-model.trim="form.plate" placeholder="请输入车牌号" clearable/>-->
+<!--          </el-form-item>-->
+<!--          <el-form-item label="区域" prop="area">-->
+<!--            <el-select v-model="form.area" placeholder="请选择区域" clearable style="width: 100%">-->
+<!--              <el-option v-for="(item, index) in areaArr" :key="index" :label="item.label" :value="item.value"/>-->
+<!--            </el-select>-->
+<!--          </el-form-item>-->
+<!--          <el-form-item label="负责人" prop="leader">-->
+<!--            <el-select v-model="form.leader" placeholder="请选择负责人" clearable style="width: 100%">-->
+<!--              <el-option v-for="(item, index) in leaderArr" :key="index" :label="item.label" :value="item.value"/>-->
+<!--            </el-select>-->
+<!--          </el-form-item>-->
+<!--          <el-form-item label="状态" prop="status">-->
+<!--            <el-select v-model="form.status" placeholder="请选择状态" clearable style="width: 100%">-->
+<!--              <el-option v-for="(item, index) in statusArr" :key="index" :label="item.label" :value="item.value"/>-->
+<!--            </el-select>-->
+<!--          </el-form-item>-->
+<!--          <el-form-item label="备注" prop="remark">-->
+<!--            <el-input v-model.trim="form.remark" type="textarea" :rows="3" placeholder="请输入备注信息" clearable/>-->
+<!--          </el-form-item>-->
+<!--        </el-form>-->
+<!--      </div>-->
+
+<!--      <template #footer>-->
+<!--        <el-button type="primary" @click="handleSubmit">提交</el-button>-->
+<!--        <el-button @click="close">关闭</el-button>-->
+<!--      </template>-->
+<!--    </el-dialog>-->
   </div>
 </template>
 
@@ -145,8 +186,8 @@ const leaderArr = ref([{
   label: "叶",
   value: "叶"
 }, {
-  label: "敦",
-  value: "敦"
+  label: "郭",
+  value: "郭"
 }, {
   label: "吴",
   value: "吴"
@@ -155,8 +196,8 @@ const statusArr = ref([{
   label: "未出库",
   value: "未出库"
 }, {
-  label: "装货中",
-  value: "装货中"
+  label: "已到达",
+  value: "已到达"
 }, {
   label: "已出库",
   value: "已出库"
@@ -204,8 +245,18 @@ const handleDelete = (row) => {
   })
 }
 
+// 添加移动端检测
+const isMobile = ref(false)
+
+const checkIsMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+
 onMounted(() => {
   tableStore.loadData()
+  checkIsMobile()
+  window.addEventListener('resize', checkIsMobile)
 })
 
 const dialogVisible = ref(false)
@@ -319,5 +370,75 @@ const handleLogout = async () => {
 <style scoped lang="scss">
 .search-item {
   width: 200px;
+}
+
+/* 移动端适配样式 */
+@media screen and (max-width: 768px) {
+  .mobile-dialog {
+    .el-dialog {
+      max-width: 90%;
+      margin: 20px auto !important;
+    }
+
+    .el-dialog__body {
+      padding: 15px;
+    }
+
+    .mobile-form {
+      .el-form-item {
+        margin-bottom: 15px;
+
+        .el-form-item__label {
+          font-size: 14px;
+          line-height: 1.5;
+          padding-right: 10px;
+        }
+
+        .el-input, .el-select, .el-textarea {
+          font-size: 14px;
+        }
+      }
+    }
+
+    .dialog-footer {
+      display: flex;
+      justify-content: space-between;
+
+      .el-button {
+        flex: 1;
+        margin: 0 5px;
+        padding: 10px;
+      }
+    }
+  }
+}
+
+.dialog-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 5px;
+
+  /* 滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 3px;
+  }
+}
+
+/* 防止移动端键盘弹出时挤压页面 */
+@media screen and (max-width: 768px) {
+  .el-dialog {
+    position: fixed;
+    top: 50% !important;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0 !important;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
 }
 </style>

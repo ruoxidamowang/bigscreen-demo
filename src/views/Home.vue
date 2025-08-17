@@ -1,7 +1,7 @@
 <template>
   <div class="dv-root" style="display: flex;">
-    <scroll-board ref="scrollBoardRef" :config="config" @mouseenter="pauseAutoRefresh" @mouseleave="resumeAutoRefresh"/>
-    <scroll-board ref="scrollBoardRef2" :config="config" @mouseenter="pauseAutoRefresh" @mouseleave="resumeAutoRefresh"/>
+    <scroll-board ref="scrollBoardRef" :config="config" />
+    <scroll-board ref="scrollBoardRef2" :config="config2" />
   </div>
 </template>
 
@@ -32,7 +32,19 @@ const config = ref({
   carousel: 'page',
   indexHeader: '序号',
   columnWidth: [60],
-  waitTime: 10 * 1000,
+  waitTime: 20 * 1000,
+  hoverPause: false,
+  data: []
+})
+
+const config2 = ref({
+  header: ['车牌号', '区域', '负责人', '备注', '状态'],
+  rowNum: 15,
+  index: true,
+  carousel: 'page',
+  indexHeader: '序号',
+  columnWidth: [60],
+  waitTime: 20 * 1000,
   hoverPause: false,
   data: []
 })
@@ -62,7 +74,6 @@ const refreshData = async () => {
         ])
       }
     });
-    console.log(data, data2)
     scrollBoardRef.value.updateRows(data)
     scrollBoardRef2.value.updateRows(data2)
   }
@@ -78,14 +89,6 @@ const startAutoRefresh = () => {
       refreshData()
     }
   }, 10 * 1000)
-}
-
-const pauseAutoRefresh = () => {
-  isPaused = true
-}
-
-const resumeAutoRefresh = () => {
-  isPaused = false
 }
 
 onMounted(() => {

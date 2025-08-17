@@ -147,28 +147,47 @@ const username = ref(localStorage.getItem('username') || '用户')
 const tableStore = useTableStore()
 const { tableData, loading } = storeToRefs(tableStore)
 
-// 区域选项
-const areaArr = ref([
-  { label: "一区", value: "一区" },
-  { label: "二区", value: "二区" },
-  { label: "三区", value: "三区" },
-  { label: "四区", value: "四区" },
-  { label: "五区", value: "五区" }
-])
+const areaArr = ref([{
+  label: "一区",
+  value: "一区"
+}, {
+  label: "二区",
+  value: "二区"
+}, {
+  label: "三区",
+  value: "三区"
+}, {
+  label: "五区",
+  value: "五区"
+}, {
+  label: "展厅区",
+  value: "展厅区"
+}, {
+  label: "正一方区",
+  value: "正一方区"
+},])
 
-// 负责人选项
-const leaderArr = ref([
-  { label: "叶", value: "叶" },
-  { label: "敦", value: "敦" },
-  { label: "吴", value: "吴" }
-])
+const leaderArr = ref([{
+  label: "叶",
+  value: "叶"
+}, {
+  label: "郭",
+  value: "郭"
+}, {
+  label: "吴",
+  value: "吴"
+}])
 
-// 状态选项
-const statusArr = ref([
-  { label: "未出库", value: "未出库" },
-  { label: "装货中", value: "装货中" },
-  { label: "已出库", value: "已出库" }
-])
+const statusArr = ref([{
+  label: "未出库",
+  value: "未出库"
+}, {
+  label: "已到达",
+  value: "已到达"
+}, {
+  label: "已出库",
+  value: "已出库"
+}])
 
 // 搜索表单
 const searchForm = ref({

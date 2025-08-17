@@ -26,6 +26,9 @@ export default defineConfig({
         host: true,
         port: 8848,
         allowedHosts: true,
+        headers: {
+            'Cache-Control': 'no-cache'
+        }
     },
     base: '/',
     resolve: {
@@ -35,5 +38,12 @@ export default defineConfig({
     },
     build: {
         minify: true,
+        rollupOptions: {
+            output: {
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js'
+            }
+        }
     }
 })
