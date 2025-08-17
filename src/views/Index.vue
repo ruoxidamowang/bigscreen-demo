@@ -55,8 +55,8 @@
       <el-table-column header-align="center" align="center" prop="status" label="状态" width="120">
         <template #default="{row}">
           <el-text v-if="row.status === '未出库'" type="danger">{{ row.status }}</el-text>
-          <el-text v-else-if="row.status === '装货中'" type="warning">{{ row.status }}</el-text>
-          <el-text v-else-if="row.status === '已出库'" type="primary">{{ row.status }}</el-text>
+          <el-text v-else-if="row.status === '已到达'" type="primary">{{ row.status }}</el-text>
+          <el-text v-else-if="row.status === '已出库'" type="success">{{ row.status }}</el-text>
         </template>
       </el-table-column>
       <el-table-column header-align="center" prop="remark" label="备注"/>
@@ -72,6 +72,7 @@
       v-model="dialogVisible"
       :title="title"
       append-to-body
+      align-center
       @close="close"
       :width="isMobile ? '90%' : '50%'"
       class="mobile-dialog"
@@ -273,11 +274,6 @@ const formRef = ref(null)
 const rules = ref({
   plate: [
     {required: true, message: '请输入车牌号', trigger: 'blur'},
-    {
-      pattern: /^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-Z0-9]{4}[A-Z0-9挂学警港澳]$/,
-      message: '请输入正确的车牌号格式',
-      trigger: 'blur'
-    }
   ],
   area: [
     {required: true, message: '请选择区域', trigger: 'change'}

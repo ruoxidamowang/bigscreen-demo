@@ -218,7 +218,7 @@ const getStatusType = (status) => {
   switch (status) {
     case '未出库':
       return 'danger'
-    case '装货中':
+    case '已到达':
       return 'warning'
     case '已出库':
       return 'success'

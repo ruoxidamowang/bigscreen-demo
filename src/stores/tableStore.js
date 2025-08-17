@@ -20,7 +20,6 @@ export const useTableStore = defineStore('table', () => {
       
       // 后端返回的是 { total, rows } 结构，需要提取 rows
       tableData.value = response || []
-      console.log('设置到store的数据:', tableData.value)
       lastUpdateTime.value = new Date().toISOString()
 
       return response

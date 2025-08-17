@@ -1,7 +1,7 @@
 <template>
   <div class="dv-root" style="display: flex;">
-    <scroll-board ref="scrollBoardRef" :config="config" />
-    <scroll-board ref="scrollBoardRef2" :config="config2" />
+    <scroll-board ref="scrollBoardRef" :config="config" @click="broadcast"/>
+    <scroll-board ref="scrollBoardRef2" :config="config2" @click="broadcast"/>
   </div>
 </template>
 
@@ -14,9 +14,9 @@ defineOptions({
 })
 
 const colorMap = {
-  "未出库": "red",
-  "装货中": "orange",
-  "已出库": "green",
+  "未出库": "#F56C6C",
+  "已到达": "#409EFF",
+  "已出库": "#67C23A",
 };
 
 // 使用store管理表格数据
@@ -26,69 +26,152 @@ const scrollBoardRef = ref(null)
 const scrollBoardRef2 = ref(null)
 
 const config = ref({
-  header: ['车牌号', '区域', '负责人', '备注', '状态'],
+  header: ['序号', '车牌号', '区域', '负责人', '备注', '状态'],
   rowNum: 15,
-  index: true,
+  index: false,
   carousel: 'page',
   indexHeader: '序号',
-  columnWidth: [60],
-  waitTime: 20 * 1000,
+  columnWidth: [80],
+  waitTime: 60 * 60 * 24 * 365,
   hoverPause: false,
   data: []
 })
 
 const config2 = ref({
-  header: ['车牌号', '区域', '负责人', '备注', '状态'],
+  header: ['序号', '车牌号', '区域', '负责人', '备注', '状态'],
   rowNum: 15,
-  index: true,
+  index: false,
   carousel: 'page',
   indexHeader: '序号',
-  columnWidth: [60],
-  waitTime: 20 * 1000,
+  columnWidth: [80],
+  waitTime: 60 * 60 * 24 * 365,
   hoverPause: false,
   data: []
 })
 
+// 存储所有数据
+const allData = ref([])
+// 当前页码
+const currentPage = ref(0)
+// 每页显示条数
+const perBoardSize = 15
+
+// 总共显示条数
+const totalDisplaySize = perBoardSize * 2
+
+// 计算总页数
+const totalPages = computed(() => {
+  return Math.ceil(allData.value.length / totalDisplaySize)
+})
+
+// 格式化数据为滚动看板需要的格式
+const formatData = (data, startIndex = 0) => {
+  return data.map((row, i) => [
+    `<span style="display:inline-block;
+        width: 2rem;
+        height: 2rem;
+        line-height: 2rem;
+        text-align:center;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 0.4rem;
+        background:#409EFF;
+        color:#fff;">${startIndex + i + 1}</span>`,
+    `<span style="font-size: 1.6rem">${row.plate}</span>`,
+    `<span style="font-size: 1.6rem">${row.area}</span>`,
+    `<span style="font-size: 1.6rem">${row.leader}</span>`,
+    `<span style="font-size: 1.6rem">${row.remark || '-'}</span>`,
+    `<span style="font-size: 1.6rem; color:${colorMap[row.status] || "black"}">${row.status}</span>`,
+  ])
+}
+
+// 获取当前页的数据
+const getCurrentPageData = () => {
+  const start = currentPage.value * totalDisplaySize
+  const end = start + totalDisplaySize
+  let pageData = allData.value.slice(start, end)
+
+  // 如果不足一页，补充空行
+  while (pageData.length < totalDisplaySize) {
+    pageData.push({
+      plate: '',
+      area: '',
+      leader: '',
+      remark: '',
+      status: ''
+    })
+  }
+
+  return pageData
+}
+
+function throttle(fn, delay) {
+  let lastTime = 0
+  let timer = null
+
+  return function (...args) {
+    const now = Date.now()
+    if (now - lastTime >= delay) {
+      lastTime = now
+      fn.apply(this, args)
+    } else {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        lastTime = Date.now()
+        fn.apply(this, args)
+      }, delay - (now - lastTime))
+    }
+  }
+}
+
+const updateScrollBoards = () => {
+  const pageData = getCurrentPageData()
+
+  const firstBoardData = pageData.slice(0, perBoardSize)
+  const secondBoardData = pageData.slice(perBoardSize, totalDisplaySize)
+
+  if (scrollBoardRef.value) {
+    config.value.data = formatData(firstBoardData, currentPage.value * totalDisplaySize)
+  }
+  if (scrollBoardRef2.value) {
+    config2.value.data = formatData(secondBoardData, currentPage.value * totalDisplaySize + perBoardSize)
+  }
+
+  currentPage.value = (currentPage.value + 1) % totalPages.value
+}
+
+// 包装成节流函数（比如 500ms 内最多执行一次）
+const throttledUpdateScrollBoards = throttle(updateScrollBoards, 1000)
+
+// 刷新数据
 const refreshData = async () => {
-  const rows = await tableStore.loadData({})
-  if (rows) {
-    const data = []
-    const data2 = []
-    rows.forEach((row, idx) => {
-      const color = colorMap[row.status] || "black";
-      if (idx % 2 === 0) {
-        data.push([
-          `<span style="font-size: 26px">${row.plate}</span>`,
-          `<span style="font-size: 26px">${row.area}</span>`,
-          `<span style="font-size: 26px">${row.leader}</span>`,
-          `<span style="font-size: 26px">${row.remark}</span>`,
-          `<span style="font-size: 26px; color:${color}">${row.status}</span>`,
-        ])
-      } else {
-        data2.push([
-          `<span style="font-size: 26px">${row.plate}</span>`,
-          `<span style="font-size: 26px">${row.area}</span>`,
-          `<span style="font-size: 26px">${row.leader}</span>`,
-          `<span style="font-size: 26px">${row.remark}</span>`,
-          `<span style="font-size: 26px; color:${color}">${row.status}</span>`,
-        ])
+  try {
+    const rows = await tableStore.loadData({})
+    if (rows && rows.length > 0) {
+      allData.value = rows
+      if (currentPage.value === 0 && config.value.data.length === 0) {
+        updateScrollBoards()
       }
-    });
-    scrollBoardRef.value.updateRows(data)
-    scrollBoardRef2.value.updateRows(data2)
+    }
+  } catch (error) {
+    console.error('刷新数据失败:', error)
   }
 }
 
 let intervalId = null
-let isPaused = false
+let refreshIntervalId = null
 
+// 启动自动刷新
 const startAutoRefresh = () => {
+  // 先清除之前的定时器
+  clearInterval(refreshIntervalId)
   clearInterval(intervalId)
-  intervalId = setInterval(() => {
-    if (!isPaused) {
-      refreshData()
-    }
-  }, 10 * 1000)
+
+  // 每10秒刷新一次数据
+  refreshIntervalId = setInterval(refreshData, 5 * 1000)
+
+  // 每20秒翻页一次
+  intervalId = setInterval(throttledUpdateScrollBoards, 15 * 1000)
 }
 
 onMounted(() => {
@@ -98,100 +181,67 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearInterval(intervalId)
+  clearInterval(refreshIntervalId)
 })
+
+const extractTextFromHtml = (html) => {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
+}
+
+const statusMap = {
+  "未出库": '请在车上等待呼叫',
+  "已到达": '请到办公室',
+  "已出库": '请到办公室签名',
+}
+
+const broadcast = ({row, ceil, rowIndex, columnIndex}) => {
+  const licensePlate = extractTextFromHtml(row[1]);
+  const status = extractTextFromHtml(row[row.length - 1]);
+
+  if (licensePlate && status) {
+    // 检查浏览器是否支持
+    if ('speechSynthesis' in window) {
+      // 创建语音合成对象
+      const utterance = new SpeechSynthesisUtterance();
+
+      // 设置文本
+      utterance.text = licensePlate.replaceAll('X', 'X ') + statusMap[status];
+
+      // 设置语言 (可选)
+      utterance.lang = 'zh-CN';
+
+      // 设置语速 (0.1-10, 默认1)
+      utterance.rate = 1;
+
+      // 设置音高 (0-2, 默认1)
+      utterance.pitch = 1;
+
+      // 开始播报
+      window.speechSynthesis.speak(utterance);
+    } else {
+      ElMessage.error("您的浏览器不支持语音合成");
+    }
+  }
+}
 
 </script>
 
 <style scoped lang="scss">
 .dv-root {
   height: 100%;
-  width: 90.4vw;
+  width: 100%;
   position: fixed;
   top: 0;
   left: 0;
 }
 
-.stats-overlay {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
-  padding: 16px;
-  color: white;
-  z-index: 1000;
-  min-width: 200px;
+:deep(.row-item) {
+  cursor: pointer;
 
-  .stats-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-
-    span {
-      font-size: 16px;
-      font-weight: 600;
-      color: white;
-    }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .scroll-indicator {
-        font-size: 12px;
-        color: #67c23a;
-        background: rgba(103, 194, 58, 0.2);
-        padding: 4px 8px;
-        border-radius: 4px;
-        border: 1px solid rgba(103, 194, 58, 0.3);
-      }
-
-      .el-button {
-        background: rgba(64, 158, 255, 0.8);
-        border: none;
-        color: white;
-
-        &:hover {
-          background: rgba(64, 158, 255, 1);
-        }
-      }
-    }
-  }
-
-  .stat-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    .stat-label {
-      color: #ccc;
-      font-size: 14px;
-    }
-
-    .stat-value {
-      font-weight: 600;
-      font-size: 16px;
-
-      &.danger {
-        color: #f56c6c;
-      }
-
-      &.warning {
-        color: #e6a23c;
-      }
-
-      &.success {
-        color: #67c23a;
-      }
-    }
+  &:hover {
+    background-color: #0085ff !important;
   }
 }
 </style>
