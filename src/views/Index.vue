@@ -98,7 +98,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="备注" prop="remark">
-            <el-input v-model.trim="form.remark" type="textarea" :rows="3" placeholder="请输入备注信息" clearable/>
+            <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入备注信息" clearable/>
           </el-form-item>
         </el-form>
       </div>
@@ -110,38 +110,6 @@
         </div>
       </template>
     </el-dialog>
-<!--    <el-dialog v-model="dialogVisible" align-center :title="title" append-to-body @close="close">-->
-<!--      <div style="height: 60vh; overflow-x: scroll">-->
-<!--        <el-form :model="form" :rules="rules" label-width="100px" ref="formRef">-->
-<!--          <el-form-item label="车牌号" prop="plate">-->
-<!--            <el-input v-model.trim="form.plate" placeholder="请输入车牌号" clearable/>-->
-<!--          </el-form-item>-->
-<!--          <el-form-item label="区域" prop="area">-->
-<!--            <el-select v-model="form.area" placeholder="请选择区域" clearable style="width: 100%">-->
-<!--              <el-option v-for="(item, index) in areaArr" :key="index" :label="item.label" :value="item.value"/>-->
-<!--            </el-select>-->
-<!--          </el-form-item>-->
-<!--          <el-form-item label="负责人" prop="leader">-->
-<!--            <el-select v-model="form.leader" placeholder="请选择负责人" clearable style="width: 100%">-->
-<!--              <el-option v-for="(item, index) in leaderArr" :key="index" :label="item.label" :value="item.value"/>-->
-<!--            </el-select>-->
-<!--          </el-form-item>-->
-<!--          <el-form-item label="状态" prop="status">-->
-<!--            <el-select v-model="form.status" placeholder="请选择状态" clearable style="width: 100%">-->
-<!--              <el-option v-for="(item, index) in statusArr" :key="index" :label="item.label" :value="item.value"/>-->
-<!--            </el-select>-->
-<!--          </el-form-item>-->
-<!--          <el-form-item label="备注" prop="remark">-->
-<!--            <el-input v-model.trim="form.remark" type="textarea" :rows="3" placeholder="请输入备注信息" clearable/>-->
-<!--          </el-form-item>-->
-<!--        </el-form>-->
-<!--      </div>-->
-
-<!--      <template #footer>-->
-<!--        <el-button type="primary" @click="handleSubmit">提交</el-button>-->
-<!--        <el-button @click="close">关闭</el-button>-->
-<!--      </template>-->
-<!--    </el-dialog>-->
   </div>
 </template>
 
@@ -176,6 +144,9 @@ const areaArr = ref([{
 }, {
   label: "五区",
   value: "五区"
+}, {
+  label: "六区",
+  value: "六区"
 }, {
   label: "展厅区",
   value: "展厅区"

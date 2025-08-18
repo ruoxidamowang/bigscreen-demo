@@ -159,6 +159,9 @@ const areaArr = ref([{
 }, {
   label: "五区",
   value: "五区"
+},{
+  label: "六区",
+  value: "六区"
 }, {
   label: "展厅区",
   value: "展厅区"
