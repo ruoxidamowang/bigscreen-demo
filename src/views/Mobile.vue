@@ -130,9 +130,7 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from 'vue'
 import {RefreshRight, Search} from '@element-plus/icons-vue'
-import {logout} from '@/api/auth.js'
 import {useRouter} from 'vue-router'
-import {ElMessage} from 'element-plus'
 import {useTableStore} from '@/stores/tableStore.js'
 import {storeToRefs} from 'pinia'
 
@@ -145,7 +143,7 @@ const username = ref(localStorage.getItem('username') || '用户')
 
 // 使用store管理表格数据
 const tableStore = useTableStore()
-const { tableData, loading } = storeToRefs(tableStore)
+const { tableData } = storeToRefs(tableStore)
 
 const areaArr = ref([{
   label: "一区",
@@ -166,31 +164,42 @@ const areaArr = ref([{
   label: "展厅区",
   value: "展厅区"
 }, {
-  label: "正一方区",
-  value: "正一方区"
+  label: "ZYF区",
+  value: "ZYF区"
 },])
 
 const leaderArr = ref([{
-  label: "叶",
-  value: "叶"
+  label: "郭煌坤",
+  value: "郭煌坤"
 }, {
-  label: "郭",
-  value: "郭"
+  label: "叶金德",
+  value: "叶金德"
 }, {
-  label: "吴",
-  value: "吴"
+  label: "李海强",
+  value: "李海强"
 }])
-
-const statusArr = ref([{
-  label: "未出库",
-  value: "未出库"
-}, {
-  label: "已到达",
-  value: "已到达"
-}, {
-  label: "已出库",
-  value: "已出库"
-}])
+const statusArr = ref([
+  {
+    label: "未开单",
+    value: "未开单"
+  },
+  {
+    label: "开单中",
+    value: "开单中"
+  },
+  {
+    label: "传单中",
+    value: "传单中"
+  },
+  {
+    label: "已开单",
+    value: "已开单"
+  },
+  {
+    label: "已到达",
+    value: "已到达"
+  }
+])
 
 // 搜索表单
 const searchForm = ref({
@@ -219,47 +228,37 @@ const handleReset = () => {
 // 获取状态标签类型
 const getStatusType = (status) => {
   switch (status) {
-    case '未出库':
+    case '未开单':
       return 'danger'
     case '已到达':
       return 'warning'
-    case '已出库':
+    case '已开单':
       return 'success'
     default:
       return 'info'
   }
 }
 
-// 页面加载时获取数据
-onMounted(() => {
-  tableStore.loadData()
-  // 启动自动刷新，每8秒刷新一次数据
-  tableStore.startAutoRefresh(8000)
-})
+let intervalId = null
 
-// 组件卸载时停止自动刷新
-onUnmounted(() => {
-  tableStore.stopAutoRefresh()
-})
+// 启动自动刷新
+const startAutoRefresh = () => {
+  // 先清除之前的定时器
+  clearInterval(intervalId)
 
-// 登出处理
-const handleLogout = async () => {
-  try {
-    await logout()
-    // 清除本地存储
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('username')
-    ElMessage.success('已退出登录')
-    // 跳转到登录页
-    router.push('/login')
-  } catch (error) {
-    console.error('登出失败:', error)
-    // 即使API调用失败，也清除本地存储并跳转
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('username')
-    router.push('/login')
-  }
+  // 每10秒刷新一次数据
+  intervalId = setInterval(() => {
+    tableStore.loadData()
+  }, 5 * 1000)
 }
+
+onMounted(() => {
+  startAutoRefresh()
+})
+
+onUnmounted(() => {
+  clearInterval(intervalId)
+})
 </script>
 
 <style scoped lang="scss">

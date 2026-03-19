@@ -1,8 +1,10 @@
 import express from 'express'
 import fs from 'fs'
 import cors from 'cors'
-import path from 'path';
+import path from 'path'
 import {fileURLToPath} from 'url'
+import {nanoid} from "nanoid";
+import {dayjs} from "element-plus";
 
 const app = express()
 
@@ -32,7 +34,7 @@ const writeData = (data) => {
 
 // 获取表格数据
 app.get('/api/table', (req, res) => {
-    const { plate, area, leader, status, sortField, sortOrder } = req.query;
+    const {plate, area, leader, status, sortField, sortOrder} = req.query;
 
     let results = readData();
 
@@ -41,10 +43,10 @@ app.get('/api/table', (req, res) => {
         results = results.filter(item => item.plate.includes(plate));
     }
     if (area) {
-        results = results.filter(item => String(item.area) === String(area));
+        results = results.filter(item => item.area.includes(area));
     }
     if (leader) {
-        results = results.filter(item => String(item.leader) === String(leader));
+        results = results.filter(item => item.leader.includes(leader));
     }
     if (status) {
         results = results.filter(item => String(item.status) === String(status));
@@ -71,32 +73,55 @@ app.get('/api/table', (req, res) => {
 // 添加数据
 app.post('/api/table', (req, res) => {
     const data = readData()
-    data.push(req.body)
-    writeData(data)
-    res.json({ success: true })
+    const newPlate = req.body.plate.toUpperCase()
+
+    const existsData = data.find(item => item.plate.toUpperCase() === newPlate)
+
+    if (existsData) {
+        res.json({ success: false, message: '车牌号已存在!' })
+    } else {
+        // 删除已有 plate 相同的记录
+        const filtered = data.filter(item => item.plate.toUpperCase() !== newPlate)
+
+        // 添加新的记录
+        filtered.push({
+            ...req.body,
+            id: existsData ? existsData.id : nanoid(10),
+            plate: newPlate,
+            createddate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            // remark: existsData ? existsData.remark + '+' + req.body.remark : req.body.remark,
+            // area: existsData ? existsData.area : req.body.area,
+            // leader: existsData ? existsData.leader : req.body.leader,
+        })
+
+        writeData(filtered)
+        res.json({ success: true })
+    }
 })
 
-// 修改数据（按车牌号唯一标识）
-app.put('/api/table/:plate', (req, res) => {
+// 修改数据
+app.put('/api/table/:id', (req, res) => {
     const data = readData()
-    const index = data.findIndex(item => item.plate === req.params.plate)
-    if (index === -1) return res.status(404).json({ error: 'Not found' })
+    const index = data.findIndex(item => item.id === req.params.id)
+    if (index === -1) return res.status(404).json({error: 'Not found'})
     data[index] = req.body
     writeData(data)
-    res.json({ success: true })
+    res.json({success: true})
 })
 
 // 删除数据（按车牌号）
-app.delete('/api/table/:plate', (req, res) => {
+app.post('/api/remove', (req, res) => {
+    const {ids}= req.body
+    console.log(ids)
     let data = readData()
-    data = data.filter(item => item.plate !== req.params.plate)
+    data = data.filter(item => !ids.includes(item.id))
     writeData(data)
-    res.json({ success: true })
+    res.json({success: true})
 })
 
 // 登录接口
 app.post('/api/auth/login', (req, res) => {
-    const { username, password } = req.body
+    const {username, password} = req.body
 
     // 验证用户名和密码
     if (username === 'admin' && password === '123456') {
@@ -104,10 +129,10 @@ app.post('/api/auth/login', (req, res) => {
         res.json({
             success: true,
             message: '登录成功',
-            user: { username }
+            user: {username}
         })
     } else {
-        res.status(401).json({
+        res.status(200).json({
             success: false,
             message: '用户名或密码错误'
         })
@@ -116,11 +141,11 @@ app.post('/api/auth/login', (req, res) => {
 
 // 登出接口
 app.post('/api/auth/logout', (req, res) => {
-    const { username } = req.body
+    const {username} = req.body
     if (username) {
         loggedInUsers.delete(username)
     }
-    res.json({ success: true, message: '登出成功' })
+    res.json({success: true, message: '登出成功'})
 })
 
 // 检查登录状态
@@ -130,7 +155,7 @@ app.get('/api/auth/check', (req, res) => {
         res.json({
             success: true,
             isLoggedIn: true,
-            user: { username }
+            user: {username}
         })
     } else {
         res.json({

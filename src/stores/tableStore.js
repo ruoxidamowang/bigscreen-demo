@@ -33,21 +33,23 @@ export const useTableStore = defineStore('table', () => {
 
   // 添加数据
   const addTableRow = async (rowData) => {
+    let res = {success: false}
     try {
-      await addRow(rowData)
+      res = await addRow(rowData)
       // 重新加载数据以获取最新状态
       await loadData()
-      return { success: true }
+      console.log(res)
+      return res
     } catch (error) {
       console.error('添加数据失败:', error)
-      return { success: false, error }
     }
+    return res
   }
 
   // 删除数据
-  const deleteTableRow = async (plate) => {
+  const deleteTableRow = async (ids) => {
     try {
-      await deleteRow(plate)
+      await deleteRow(ids)
       // 重新加载数据以获取最新状态
       await loadData()
       return { success: true }
@@ -58,9 +60,9 @@ export const useTableStore = defineStore('table', () => {
   }
 
   // 更新数据
-  const updateTableRow = async (plate, rowData) => {
+  const updateTableRow = async (id, rowData) => {
     try {
-      await editRow(plate, rowData)
+      await editRow(id, rowData)
       await loadData()
       return { success: true }
     } catch (error) {

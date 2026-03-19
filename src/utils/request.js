@@ -2,7 +2,8 @@ import axios from "axios";
 
 // 创建 axios 实例
 const service = axios.create({
-    baseURL: "http://160.202.251.125:9998", // 基础 URL
+    // baseURL: "http://125.122.25.150:18899", //生产
+    baseURL: "http://localhost:8888",
     timeout: 5000 // 请求超时
 });
 

@@ -1,37 +1,20 @@
 [
   {
-    "plate": "闽CDC6539",
-    "area": "五区",
-    "leader": "郭",
-    "remark": "散装",
-    "status": "未出库"
+    "plate": "闽C85859",
+    "area": "一区",
+    "leader": "郭煌坤",
+    "remark": "123",
+    "status": "未开单",
+    "id": "7t4gtFsLX-",
+    "createddate": "2025-11-02 12:52:15"
   },
   {
-    "plate": "闽CX932Z",
-    "area": "五区",
-    "leader": "郭",
-    "remark": "散装",
-    "status": "未出库"
-  },
-  {
-    "plate": "闽C8XX07",
-    "area": "五区",
-    "leader": "郭",
-    "remark": "散装",
-    "status": "未出库"
-  },
-  {
-    "plate": "闽A12345",
-    "area": "正一方区",
-    "leader": "吴",
-    "remark": "",
-    "status": "已出库"
-  },
-  {
-    "plate": "A12334",
+    "plate": "闽C858591",
     "area": "三区",
-    "leader": "叶",
+    "leader": "郭煌坤",
     "remark": "",
-    "status": "已到达"
+    "status": "开单中",
+    "id": "axXHzoWjOd",
+    "createddate": "2025-11-02 13:00:24"
   }
 ]

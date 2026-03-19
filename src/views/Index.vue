@@ -44,22 +44,25 @@
         <el-button :icon="Search" type="primary" @click="handleSearch">搜索</el-button>
         <el-button :icon="RefreshRight" @click="handleReset">重置</el-button>
         <el-button :icon="CirclePlus" type="success" @click="handleDetail(null)">添加</el-button>
+        <el-button :icon="Delete" type="danger" @click="handleDelete">批量删除</el-button>
       </el-form-item>
     </el-form>
 
-    <el-table :data="tableData" highlight-current-row border show-overflow-tooltip stripe style="height: 80vh">
+    <el-table ref="tableRef" :data="tableData" highlight-current-row border show-overflow-tooltip stripe style="height: 80vh">
+      <el-table-column type="selection" width="55" />
       <el-table-column header-align="center" type="index" width="60" label="序号"/>
       <el-table-column header-align="center" prop="plate" label="车牌号" width="180"/>
       <el-table-column header-align="center" prop="area" label="区域" width="180"/>
       <el-table-column header-align="center" prop="leader" label="负责人" width="120"/>
       <el-table-column header-align="center" align="center" prop="status" label="状态" width="120">
         <template #default="{row}">
-          <el-text v-if="row.status === '未出库'" type="danger">{{ row.status }}</el-text>
+          <el-text v-if="row.status === '未开单'" type="danger">{{ row.status }}</el-text>
           <el-text v-else-if="row.status === '已到达'" type="primary">{{ row.status }}</el-text>
-          <el-text v-else-if="row.status === '已出库'" type="success">{{ row.status }}</el-text>
+          <el-text v-else-if="row.status === '已开单'" type="success">{{ row.status }}</el-text>
         </template>
       </el-table-column>
       <el-table-column header-align="center" prop="remark" label="备注"/>
+      <el-table-column header-align="center" prop="createddate" label="创建时间" width="200" align="center"/>
       <el-table-column header-align="center" label="操作" width="160">
         <template #default="{ row }">
           <el-button text type="primary" size="small" @click="handleDetail(row)">编辑</el-button>
@@ -83,12 +86,12 @@
             <el-input v-model.trim="form.plate" placeholder="请输入车牌号" clearable/>
           </el-form-item>
           <el-form-item label="区域" prop="area">
-            <el-select v-model="form.area" placeholder="请选择区域" clearable style="width: 100%">
+            <el-select v-model="form.area" placeholder="请选择区域" multiple clearable style="width: 100%">
               <el-option v-for="(item, index) in areaArr" :key="index" :label="item.label" :value="item.value"/>
             </el-select>
           </el-form-item>
           <el-form-item label="负责人" prop="leader">
-            <el-select v-model="form.leader" placeholder="请选择负责人" clearable style="width: 100%">
+            <el-select v-model="form.leader" placeholder="请选择负责人" multiple clearable style="width: 100%">
               <el-option v-for="(item, index) in leaderArr" :key="index" :label="item.label" :value="item.value"/>
             </el-select>
           </el-form-item>
@@ -114,7 +117,7 @@
 </template>
 
 <script setup>
-import {CirclePlus, RefreshRight, Search, SwitchButton} from '@element-plus/icons-vue'
+import {CirclePlus, Delete, RefreshRight, Search, SwitchButton} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {logout} from '@/api/auth.js'
 import {useRouter} from 'vue-router'
@@ -151,29 +154,41 @@ const areaArr = ref([{
   label: "展厅区",
   value: "展厅区"
 }, {
-  label: "正一方区",
-  value: "正一方区"
+  label: "ZYF区",
+  value: "ZYF区"
 },])
 const leaderArr = ref([{
-  label: "叶",
-  value: "叶"
+  label: "郭煌坤",
+  value: "郭煌坤"
 }, {
-  label: "郭",
-  value: "郭"
+  label: "叶金德",
+  value: "叶金德"
 }, {
-  label: "吴",
-  value: "吴"
+  label: "李海强",
+  value: "李海强"
 }])
-const statusArr = ref([{
-  label: "未出库",
-  value: "未出库"
-}, {
-  label: "已到达",
-  value: "已到达"
-}, {
-  label: "已出库",
-  value: "已出库"
-}])
+const statusArr = ref([
+  {
+    label: "未开单",
+    value: "未开单"
+  },
+  {
+    label: "开单中",
+    value: "开单中"
+  },
+  {
+    label: "传单中",
+    value: "传单中"
+  },
+  {
+    label: "已开单",
+    value: "已开单"
+  },
+  {
+    label: "已到达",
+    value: "已到达"
+  }
+])
 
 const searchForm = ref({
   plate: '',
@@ -196,25 +211,36 @@ const handleReset = () => {
   tableStore.loadData()
 }
 
+const tableRef = ref()
+
 const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    `确定要删除车牌号为 ${row.plate} 的记录吗？`,
-    '删除确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  ).then(async () => {
-    const result = await tableStore.deleteTableRow(row.plate)
-    if (result.success) {
-      ElMessage.success('删除成功')
-    } else {
-      ElMessage.error('删除失败')
-    }
-  }).catch(() => {
-    ElMessage.info('已取消删除')
-  })
+  let ids = []
+  if (row.id) {
+    ids.push(row.id)
+  } else {
+    ids = tableRef.value.getSelectionRows().map(item => item.id)
+  }
+  if (ids.length > 0) {
+    ElMessageBox.confirm(
+      `确定要删除选中数据吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    ).then(async () => {
+      const result = await tableStore.deleteTableRow(ids)
+      if (result.success) {
+        ElMessage.success('删除成功')
+        handleSearch()
+      } else {
+        ElMessage.error('删除失败')
+      }
+    })
+  } else {
+    ElMessage.error("请选择需要删除的数据")
+  }
 }
 
 // 添加移动端检测
@@ -223,7 +249,6 @@ const isMobile = ref(false)
 const checkIsMobile = () => {
   isMobile.value = window.innerWidth <= 768
 }
-
 
 onMounted(() => {
   tableStore.loadData()
@@ -235,8 +260,8 @@ const dialogVisible = ref(false)
 const title = ref('')
 const form = ref({
   plate: '',
-  area: '',
-  leader: '',
+  area: [],
+  leader: [],
   remark: '',
   status: ''
 })
@@ -264,6 +289,8 @@ const handleDetail = (row) => {
   if (row) {
     title.value = '编辑'
     form.value = {...row}
+    form.value.area = row.area.split(',')
+    form.value.leader = row.leader.split(',')
   } else {
     title.value = '新增'
   }
@@ -275,16 +302,22 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate()
+    const d = {
+      ...form.value,
+      area: form.value.area.join(','),
+      leader: form.value.leader.join(','),
+    }
     if (title.value === '新增') {
-      const result = await tableStore.addTableRow(form.value)
+      const result = await tableStore.addTableRow(d)
+      console.log(result)
       if (result.success) {
         ElMessage.success('保存成功')
         close()
       } else {
-        ElMessage.error('保存失败')
+        ElMessage.error(result.message || '保存失败')
       }
     } else {
-      const result = await tableStore.updateTableRow(form.value.plate, form.value)
+      const result = await tableStore.updateTableRow(d.id, d)
       if (result.success) {
         ElMessage.success('更新成功')
         close()
